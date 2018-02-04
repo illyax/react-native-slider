@@ -508,7 +508,6 @@ export default class Slider extends PureComponent {
   _renderThumb = () => {
     var {thumbImage, customThumb} = this.props;
 
-    console.log('xx')
     if (!thumbImage && !customThumb) return;
 
     return customThumb || <Image source={thumbImage} />;
