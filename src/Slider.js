@@ -280,7 +280,7 @@ export default class Slider extends PureComponent {
             }
           ]}
         >
-          {this._renderThumbImage()}
+          {this._renderThumb()}
         </Animated.View>
         <View
           renderToHardwareTextureAndroid={true}
@@ -505,7 +505,7 @@ export default class Slider extends PureComponent {
     );
   };
 
-  _renderThumbImage = () => {
+  _renderThumb = () => {
     var {thumbImage, customThumb} = this.props;
 
     console.log('xx')
