@@ -28,9 +28,9 @@ function Rect(x, y, width, height) {
 
 Rect.prototype.containsPoint = function(x, y) {
   return (x >= this.x
-          && y >= this.y
-          && x <= this.x + this.width
-          && y <= this.y + this.height);
+    && y >= this.y
+    && x <= this.x + this.width
+    && y <= this.y + this.height);
 };
 
 var DEFAULT_ANIMATION_CONFIGS = {
@@ -167,6 +167,11 @@ export default class Slider extends PureComponent {
      * Used to configure the animation parameters.  These are the same parameters in the Animated library.
      */
     animationConfig : PropTypes.object,
+
+    /**
+     * Custom thumb view
+     */
+    customThumb: PropTypes.object
   };
 
   static defaultProps = {
@@ -501,11 +506,12 @@ export default class Slider extends PureComponent {
   };
 
   _renderThumbImage = () => {
-    var {thumbImage} = this.props;
+    var {thumbImage, customThumb} = this.props;
 
-    if (!thumbImage) return;
+    console.log('xx')
+    if (!thumbImage && !customThumb) return;
 
-    return <Image source={thumbImage} />;
+    return customThumb || <Image source={thumbImage} />;
   };
 }
 
@@ -520,9 +526,7 @@ var defaultStyles = StyleSheet.create({
   },
   thumb: {
     position: 'absolute',
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: THUMB_SIZE / 2,
+    backgroundColor: 'transparent'
   },
   touchArea: {
     position: 'absolute',
