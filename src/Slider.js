@@ -11,7 +11,7 @@ import {
   PanResponder,
   View,
   Easing,
-  ViewPropTypes
+  ViewPropTypes, TouchableWithoutFeedback
 } from "react-native";
 
 import PropTypes from 'prop-types';
@@ -26,7 +26,7 @@ function Rect(x, y, width, height) {
   this.height = height;
 }
 
-Rect.prototype.containsPoint = function(x, y) {
+Rect.prototype.containsPoint = function (x, y) {
   return (x >= this.x
     && y >= this.y
     && x <= this.x + this.width
@@ -34,14 +34,14 @@ Rect.prototype.containsPoint = function(x, y) {
 };
 
 var DEFAULT_ANIMATION_CONFIGS = {
-  spring : {
-    friction : 7,
-    tension  : 100
+  spring: {
+    friction: 7,
+    tension: 100
   },
-  timing : {
-    duration : 150,
-    easing   : Easing.inOut(Easing.ease),
-    delay    : 0
+  timing: {
+    duration: 150,
+    easing: Easing.inOut(Easing.ease),
+    delay: 0
   },
   // decay : { // This has a serious bug
   //   velocity     : 1,
@@ -156,22 +156,27 @@ export default class Slider extends PureComponent {
     /**
      * Set to true to animate values with default 'timing' animation type
      */
-    animateTransitions : PropTypes.bool,
+    animateTransitions: PropTypes.bool,
 
     /**
      * Custom Animation type. 'spring' or 'timing'.
      */
-    animationType : PropTypes.oneOf(['spring', 'timing']),
+    animationType: PropTypes.oneOf(['spring', 'timing']),
 
     /**
      * Used to configure the animation parameters.  These are the same parameters in the Animated library.
      */
-    animationConfig : PropTypes.object,
+    animationConfig: PropTypes.object,
 
     /**
      * Custom thumb view
      */
-    customThumb: PropTypes.object
+    customThumb: PropTypes.object,
+
+    /**
+     * Slider initial value after activation
+     */
+    activationInitialValue: PropTypes.number
   };
 
   static defaultProps = {
@@ -193,6 +198,7 @@ export default class Slider extends PureComponent {
     thumbSize: {width: 0, height: 0},
     allMeasured: false,
     value: new Animated.Value(this.props.value),
+    active: false
   };
 
   componentWillMount() {
@@ -220,6 +226,43 @@ export default class Slider extends PureComponent {
     }
   };
 
+  _activateSlider() {
+    const {activationInitialValue, onValueChange} = this.props;
+
+    this.setState({active: true, value: new Animated.Value(activationInitialValue)});
+
+    if (onValueChange) {
+      onValueChange.apply(this, [activationInitialValue]);
+    }
+  }
+
+  generateInactiveSlider() {
+    const mainStyles = styles || defaultStyles;
+
+    const {
+      maximumTrackTintColor,
+
+      styles,
+      style,
+      trackStyle,
+      ...other
+    } = this.props;
+
+    return (
+      <View {...other} style={[mainStyles.container, style]} onLayout={this._measureContainer}>
+        <View
+          style={[{backgroundColor: maximumTrackTintColor,}, mainStyles.track, trackStyle]}
+          renderToHardwareTextureAndroid={true}
+          onLayout={this._measureTrack}/>
+        <View style={mainStyles.inactiveThumbWrap}>
+          <TouchableWithoutFeedback onPressIn={this._activateSlider.bind(this)}>
+            {this._renderThumb()}
+          </TouchableWithoutFeedback>
+        </View>
+      </View>
+    )
+  }
+
   render() {
     var {
       minimumValue,
@@ -235,7 +278,7 @@ export default class Slider extends PureComponent {
       debugTouchArea,
       ...other
     } = this.props;
-    var {value, containerSize, trackSize, thumbSize, allMeasured} = this.state;
+    var {value, containerSize, trackSize, thumbSize, allMeasured, active} = this.state;
     var mainStyles = styles || defaultStyles;
     var thumbLeft = value.interpolate({
       inputRange: [minimumValue, maximumValue],
@@ -255,16 +298,21 @@ export default class Slider extends PureComponent {
     };
 
     var touchOverflowStyle = this._getTouchOverflowStyle();
+    let content;
+
+    if (!active) {
+      return this.generateInactiveSlider();
+    }
 
     return (
       <View {...other} style={[mainStyles.container, style]} onLayout={this._measureContainer}>
         <View
           style={[{backgroundColor: maximumTrackTintColor,}, mainStyles.track, trackStyle]}
           renderToHardwareTextureAndroid={true}
-          onLayout={this._measureTrack} />
+          onLayout={this._measureTrack}/>
         <Animated.View
           renderToHardwareTextureAndroid={true}
-          style={[mainStyles.track, trackStyle, minimumTrackStyle]} />
+          style={[mainStyles.track, trackStyle, minimumTrackStyle]}/>
         <Animated.View
           onLayout={this._measureThumb}
           renderToHardwareTextureAndroid={true}
@@ -273,8 +321,8 @@ export default class Slider extends PureComponent {
             mainStyles.thumb, thumbStyle,
             {
               transform: [
-                { translateX: thumbLeft },
-                { translateY: 0 }
+                {translateX: thumbLeft},
+                {translateY: 0}
               ],
               ...valueVisibleStyle
             }
@@ -417,12 +465,12 @@ export default class Slider extends PureComponent {
   };
 
   _setCurrentValueAnimated = (value: number) => {
-    var animationType   = this.props.animationType;
+    var animationType = this.props.animationType;
     var animationConfig = Object.assign(
       {},
       DEFAULT_ANIMATION_CONFIGS[animationType],
       this.props.animationConfig,
-      {toValue : value}
+      {toValue: value}
     );
 
     Animated[animationType](this.state.value, animationConfig).start();
@@ -510,7 +558,7 @@ export default class Slider extends PureComponent {
 
     if (!thumbImage && !customThumb) return;
 
-    return customThumb || <Image source={thumbImage} />;
+    return customThumb || <Image source={thumbImage}/>;
   };
 }
 
@@ -533,6 +581,12 @@ var defaultStyles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  inactiveThumbWrap: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    width: '100%'
   },
   debugThumbTouchArea: {
     position: 'absolute',
