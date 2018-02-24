@@ -198,7 +198,6 @@ export default class Slider extends PureComponent {
     thumbSize: {width: 0, height: 0},
     allMeasured: false,
     value: new Animated.Value(this.props.value),
-    active: false
   };
 
   componentWillMount() {
@@ -226,43 +225,6 @@ export default class Slider extends PureComponent {
     }
   };
 
-  _activateSlider() {
-    const {activationInitialValue, onValueChange} = this.props;
-
-    this.setState({active: true, value: new Animated.Value(activationInitialValue)});
-
-    if (onValueChange) {
-      onValueChange.apply(this, [activationInitialValue]);
-    }
-  }
-
-  generateInactiveSlider() {
-    const mainStyles = styles || defaultStyles;
-
-    const {
-      maximumTrackTintColor,
-
-      styles,
-      style,
-      trackStyle,
-      ...other
-    } = this.props;
-
-    return (
-      <View {...other} style={[mainStyles.container, style]} onLayout={this._measureContainer}>
-        <View
-          style={[{backgroundColor: maximumTrackTintColor,}, mainStyles.track, trackStyle]}
-          renderToHardwareTextureAndroid={true}
-          onLayout={this._measureTrack}/>
-        <View style={mainStyles.inactiveThumbWrap}>
-          <TouchableWithoutFeedback onPressIn={this._activateSlider.bind(this)}>
-            {this._renderThumb()}
-          </TouchableWithoutFeedback>
-        </View>
-      </View>
-    )
-  }
-
   render() {
     var {
       minimumValue,
@@ -278,7 +240,7 @@ export default class Slider extends PureComponent {
       debugTouchArea,
       ...other
     } = this.props;
-    var {value, containerSize, trackSize, thumbSize, allMeasured, active} = this.state;
+    var {value, containerSize, trackSize, thumbSize, allMeasured} = this.state;
     var mainStyles = styles || defaultStyles;
     var thumbLeft = value.interpolate({
       inputRange: [minimumValue, maximumValue],
@@ -299,10 +261,6 @@ export default class Slider extends PureComponent {
 
     var touchOverflowStyle = this._getTouchOverflowStyle();
     let content;
-
-    if (!active) {
-      return this.generateInactiveSlider();
-    }
 
     return (
       <View {...other} style={[mainStyles.container, style]} onLayout={this._measureContainer}>
