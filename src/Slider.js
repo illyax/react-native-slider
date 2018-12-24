@@ -352,6 +352,7 @@ export default class Slider extends PureComponent {
 
     this._setCurrentValue(this._getValue(gestureState));
     this._fireChangeEvent('onSlidingComplete');
+    this._fireChangeEvent('onValueChange');
   };
 
   _measureContainer = (x: Object) => {
